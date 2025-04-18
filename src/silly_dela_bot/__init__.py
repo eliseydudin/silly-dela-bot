@@ -3,6 +3,15 @@ import telebot
 import telebot.types as tp
 from .config import Config
 import time
+import datetime
+
+
+def get_hashtags():
+    HASHTAGS = "#cat #cats #mastocats"
+    if datetime.datetime.today().weekday() == 5:
+        return HASHTAGS + " #caturday"
+    else:
+        return HASHTAGS
 
 
 class Client:
@@ -30,9 +39,13 @@ class Client:
             media_file=photo_bytes, mime_type="image/jpeg"
         )
 
-        self.mastodon_instance.status_post(
-            status=message.caption or "", media_ids=photo_id["id"]
+        caption = (message.caption or "") + get_hashtags()
+        status = self.mastodon_instance.status_post(
+            status=caption, media_ids=photo_id["id"]
         )
+
+        self.mastodon_instance.status_favourite(status)
+        self.mastodon_instance.status_reblog(status)
 
     def on_video(self, message: tp.Message):
         file = self.bot.get_file(message.video.file_id)
@@ -43,9 +56,15 @@ class Client:
 
         time.sleep(60.0)  # for some reason mastodon takes some time to upload stuff :/
 
-        self.mastodon_instance.status_post(
-            status=message.caption or "", media_ids=video_id["id"]
+        caption = (message.caption or "") + get_hashtags()
+        status = self.mastodon_instance.status_post(
+            status=caption, media_ids=video_id["id"]
         )
+
+        time.sleep(5.0)  # ensure its actually posted
+
+        self.mastodon_instance.status_favourite(status)
+        self.mastodon_instance.status_reblog(status)
 
     def run(self):
         self.bot.infinity_polling()
