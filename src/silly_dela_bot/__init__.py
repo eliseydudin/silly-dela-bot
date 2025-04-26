@@ -56,7 +56,10 @@ class Client:
 
         time.sleep(60.0)  # for some reason mastodon takes some time to upload stuff :/
 
-        caption = (message.caption + " " or "") + get_hashtags()
+        if message.caption is None:
+            caption = get_hashtags()
+        else:
+            caption = f"{message.caption} {get_hashtags()}"
         status = self.mastodon_instance.status_post(
             status=caption, media_ids=video_id["id"]
         )
