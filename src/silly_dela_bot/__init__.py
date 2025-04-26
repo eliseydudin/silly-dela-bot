@@ -39,7 +39,7 @@ class Client:
             media_file=photo_bytes, mime_type="image/jpeg"
         )
 
-        caption = (message.caption or "") + get_hashtags()
+        caption = (message.caption + " " or "") + get_hashtags()
         status = self.mastodon_instance.status_post(
             status=caption, media_ids=photo_id["id"]
         )
@@ -56,12 +56,10 @@ class Client:
 
         time.sleep(60.0)  # for some reason mastodon takes some time to upload stuff :/
 
-        caption = (message.caption or "") + get_hashtags()
+        caption = (message.caption + " " or "") + get_hashtags()
         status = self.mastodon_instance.status_post(
             status=caption, media_ids=video_id["id"]
         )
-
-        time.sleep(5.0)  # ensure its actually posted
 
         self.mastodon_instance.status_favourite(status)
         self.mastodon_instance.status_reblog(status)
