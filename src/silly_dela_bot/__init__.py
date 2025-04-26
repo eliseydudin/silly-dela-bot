@@ -39,7 +39,10 @@ class Client:
             media_file=photo_bytes, mime_type="image/jpeg"
         )
 
-        caption = (message.caption + " " or "") + get_hashtags()
+        if message.caption is None:
+            caption = get_hashtags()
+        else:
+            caption = f"{message.caption} {get_hashtags()}"
         status = self.mastodon_instance.status_post(
             status=caption, media_ids=photo_id["id"]
         )
