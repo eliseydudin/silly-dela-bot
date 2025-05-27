@@ -1,12 +1,9 @@
-import google.genai
 import mastodon
 import telebot
 import telebot.types as tp
 from .config import Config
 import time
 import datetime
-import google
-from google.genai import types
 
 
 def get_hashtags():
@@ -24,8 +21,6 @@ class Client:
             api_base_url=config.MASTODON_INSTANCE,
         )
 
-        self.gemini_client = google.genai.Client(api_key=config.GEMINI_TOKEN)
-
         self.bot = telebot.TeleBot(config.TELEGRAM_BOT_TOKEN)
         self.on_photo = self.bot.channel_post_handler(content_types=["photo"])(
             self.on_photo
@@ -40,34 +35,14 @@ class Client:
         file = self.bot.get_file(file_id)
         photo_bytes = self.bot.download_file(file.file_path)
 
-        try:
-            response = self.gemini_client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=[
-                    types.Part.from_bytes(
-                        data=photo_bytes,
-                        mime_type="image/jpeg",
-                    ),
-                    "Generate alt text for this image. Just send any text for it and nothing else",
-                ],
-            )
-            alt_text = response.text
-        except Exception as e:
-            print(f"Cannot fetch data for the alt text: {e}")
-            alt_text = "Cat"
-
-        if alt_text is None:
-            alt_text = "Cat"
-
         photo_id = self.mastodon_instance.media_post(
-            media_file=photo_bytes, mime_type="image/jpeg", description=alt_text
+            media_file=photo_bytes, mime_type="image/jpeg"
         )
 
         if message.caption is None:
             caption = get_hashtags()
         else:
             caption = f"{message.caption} {get_hashtags()}"
-
         status = self.mastodon_instance.status_post(
             status=caption, media_ids=photo_id["id"]
         )
