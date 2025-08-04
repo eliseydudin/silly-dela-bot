@@ -4,6 +4,7 @@ import telebot.types as tp
 from .config import Config
 import time
 import datetime
+import logging
 
 
 def get_hashtags():
@@ -20,8 +21,10 @@ class Client:
             access_token=config.MASTODON_ACCESS_TOKEN,
             api_base_url=config.MASTODON_INSTANCE,
         )
-
+        logging.info(f"logged into {config.MASTODON_INSTANCE}")
         self.bot = telebot.TeleBot(config.TELEGRAM_BOT_TOKEN)
+        logging.info(f"logged into telegram as @{self.bot.user.full_name}")
+
         self.on_photo = self.bot.channel_post_handler(content_types=["photo"])(
             self.on_photo
         )
@@ -49,6 +52,7 @@ class Client:
 
         self.mastodon_instance.status_favourite(status)
         self.mastodon_instance.status_reblog(status)
+        logging.info(f"made a new post at {time.time()}")
 
     def on_video(self, message: tp.Message):
         file = self.bot.get_file(message.video.file_id)
@@ -75,6 +79,7 @@ class Client:
 
 
 def main() -> None:
+    logging.basicConfig(level=logging.INFO)
     config = Config()
     client = Client(config)
     client.run()
